@@ -16,7 +16,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(PROJECT_SOURCES
         log.cpp
         Config.cpp
-       Config.h                # This file is in the root directory
+       Config.h
+        singleton.h                # This file is in the root directory
         # This file is inside the sylar/ directory
 )
 

@@ -33,8 +33,8 @@ namespace sylar {
         virtual std::string getTypeName() const = 0;
 
     private:
-        std::string m_name;
-        std::string m_description;
+        std::string m_name;             //配置名称
+        std::string m_description;      //配置参数的描述
     };
 
 }

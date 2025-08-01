@@ -47,7 +47,6 @@ namespace sylar {
     class Config{
     public:
         typedef std::unordered_map<std::string, ConfigVarBase::ptr> ConfigVarMap;
-        typedef RWMutex RWMutexType;
 
         template<class T>
         static typename ConfigVar<T>::ptr Lookup(const std::string& name,
