@@ -43,17 +43,16 @@ break;
      * @param fiber_id 协程ID
      * @param time 时间戳
      */
-    LogEvent::LogEvent(LogLevel::Level level
-                ,const char* file, int32_t line, uint32_t elapse
-                , uint32_t threadID, uint32_t fiber_id, uint64_t time)
+    LogEvent::LogEvent(const std::string& logName,LogLevel::Level level,const char* file,
+              int32_t line,uint32_t elapse,uint32_t threadID,uint32_t fiber_id,uint64_t time)
         :m_level(level)
         ,m_file(file)
         ,m_line(line)
         ,m_elapse(elapse)
         ,m_threadId(threadID)
         ,m_fiberId(fiber_id)
-        ,m_time(time){
-    }
+        ,m_time(time)
+        ,m_logName(logName) {}
 
     /**
      * @brief Logger构造函数 - 创建日志器
@@ -318,35 +317,6 @@ return LogFormatter::FormatItem::ptr(new C(fmt));}}
             i->format(ss, event);
         }
         return ss.str();
-    }
-
-    /**
-     * @brief 测试主函数 - 演示日志系统的基本使用
-     */
-    int main(int argc, char** argv) {
-        // 创建日志事件
-        LogEvent::ptr event(new LogEvent(
-            LogLevel::INFO,        // 日志级别
-            __FILE__,              // 当前文件名
-            __LINE__,              // 当前行号
-            1234567,               // 程序运行时间
-            syscall(SYS_gettid),   // 线程ID
-            0,                     // 协程ID
-            time(0)                // 当前时间戳
-            ));
-
-        // 创建日志器
-        Logger::ptr lg(new Logger("XYZ"));
-        // 创建格式化器，定义输出格式
-        LogFormatter::ptr formatter(new LogFormatter(
-            "%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));
-        // 创建控制台输出器
-        StdoutLogAppender::ptr appender(new StdoutLogAppender());
-        appender->setFormatter(formatter);
-        lg->addAppender(appender);
-        // 输出日志
-        lg->log(event);
-        return 0;
     }
 
     /**

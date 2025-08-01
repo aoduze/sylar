@@ -2,7 +2,7 @@
 #define LOG_H
 
 /**
- * @brief 日志系统结构图 (紧凑版)
+ * @brief 日志系统结构图
  *
  * +-------------------------------------------------------------+
  * | LogEventWrap(解析构触发器), LogEvent(日志事件), LogLevel(日志级别) |
@@ -22,6 +22,7 @@
  * |   -> DateTime(日期), Filename(文件名), Line(行号)          |
  * |   -> Tab(制表符), FiberId(协程ID), String(字面量)          |
  * +-------------------------------------------------------------+
+ *
  */
 
 #include <unistd.h>        // UNIX标准定义
@@ -55,6 +56,12 @@
  * - LogAppender: 日志输出器，负责将日志输出到不同目标
  * - Logger: 日志器，管理日志的输出流程
  */
+
+#define SYLAR_LOG_LEVEL(logger, level) \
+    if(logger -> getLevel() <= level) \
+        sylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent(logger,level, \
+                            __FILE__, __LINE__, 0 ,sylar::GetThreadId(), \
+                            sylar::GetFiberId(), time(0))))
 
 namespace sylar {
 
@@ -415,7 +422,7 @@ namespace sylar {
         ~ LogEventWrap();
 
         /// 获取日志事件对象
-        LogEvent::ptr getEvent() const { return m_event};
+        LogEvent::ptr getEvent() const { return m_event; }
 
         /// 获取字符串流，用于流式写入日志内容
         std::stringstream &getSS();
@@ -424,6 +431,9 @@ namespace sylar {
         LogEvent::ptr m_event;   ///< 日志事件对象
         Logger::ptr m_logger;    ///< 日志器对象
     };
+
+
+
 }
 
 #endif //LOG_H
