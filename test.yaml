@@ -1,3 +1,30 @@
 person:
   index: 1
   info: {"name": "XYZ","age: 28"}
+
+Folded_style: |
+  为什么这个就可以用
+
+literal_style: >
+  字符串
+
+boolean: true
+
+student:
+  index: 1
+  name: "XYZ"
+  age: 28
+  sex: true
+  height: 1.75
+  weight: 75
+  courses:
+    - name: "Math"
+      score: 90
+    - name: "English"
+      score: 80
+    - name: "Chinese"
+      score: 70
+  address:
+    province: "Guangdong"
+    city: "Guangzhou"
+    district: "Tianhe"

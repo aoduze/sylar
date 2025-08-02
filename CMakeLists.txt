@@ -17,7 +17,11 @@ set(PROJECT_SOURCES
         log.cpp
         Config.cpp
        Config.h
-        singleton.h                # This file is in the root directory
+        singleton.h
+        thread.cpp
+        thread.h
+        mutex.cpp
+        mutex.h                # This file is in the root directory
         # This file is inside the sylar/ directory
 )
 

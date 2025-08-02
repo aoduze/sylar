@@ -5,6 +5,9 @@
 #include <time.h>
 #include <string.h>
 #include "config.h"
+#include "util.h"
+#include "macro.h"
+#include "env.h"
 
 namespace sylar {
 
@@ -435,6 +438,7 @@ std::ostream& LogFormatter::format(std::ostream& ofs, std::shared_ptr<Logger> lo
 void LogFormatter::init() {
     //str, format, type
     std::vector<std::tuple<std::string, std::string, int> > vec;
+    //临时存储
     std::string nstr;
     for(size_t i = 0; i < m_pattern.size(); ++i) {
         if(m_pattern[i] != '%') {
@@ -449,8 +453,11 @@ void LogFormatter::init() {
             }
         }
 
+        //跳过%，处理下一个字符
         size_t n = i + 1;
+        // 是否遇到{但还没到}
         int fmt_status = 0;
+        // 记录大括号内参数开始位置
         size_t fmt_begin = 0;
 
         std::string str;
@@ -618,7 +625,6 @@ public:
         }
 
         if(n["appenders"].IsDefined()) {
-            //std::cout << "==" << ld.name << " = " << n["appenders"].size() << std::endl;
             for(size_t x = 0; x < n["appenders"].size(); ++x) {
                 auto a = n["appenders"][x];
                 if(!a["type"].IsDefined()) {

@@ -1,108 +1,106 @@
-#include "Config.h"
-
+#include "config.h"
+//#include "env.h"
+//#include "util.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 namespace sylar {
-    //接下来我们通过模板来配置不同的子类
-    template<class T>
-    class ConfigVar : public ConfigVarBase {
-    public:
-        typedef std::shared_ptr<ConfigVar> ptr;
 
-        ConfigVar(const std::string& name
-                ,const T& default_value
-                ,const std::string& description = "")
-            :ConfigVarBase(name, description)
-            ,m_val(default_value) {}
+static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
-        std::string toString() override {
-            try {
-                return boost::lexical_cast<std::string>(m_val);
-            } catch (std::exception& e) {
-                std::cout<< "ConfigVar::toString exception"
-                << e.what() << "convert: " << typeid(m_val).name() << " to string";
-            }
-            return "";
-        }
+ConfigVarBase::ptr Config::LookupBase(const std::string& name) {
+    RWMutexType::ReadLock lock(GetMutex());
+    auto it = GetDatas().find(name);
+    return it == GetDatas().end() ? nullptr : it->second;
+}
 
-        bool fromString(const std::string& val) override {
-            try {
-                m_val = boost::lexical_cast<T>(val);
-            } catch (std::exception& e) {
-                std::cout<< "ConfigVar::fromString exception"
-                << e.what() << "convert: string to " << typeid(m_val).name();
-            }
-            return false;
-        }
+//"A.B", 10
+//A:
+//  B: 10
+//  C: str
 
-        const T getValue() const { return m_val;}
-        void setValue(const T& v) { m_val = v;}
-
-        std::string getTypeName() const override { return typeid(T).name();}
-
-    private:
-        T m_val;
-    };
-
-    //Config类用于处理yaml配置文件
-    class Config{
-    public:
-        typedef std::unordered_map<std::string, ConfigVarBase::ptr> ConfigVarMap;
-
-        template<class T>
-        static typename ConfigVar<T>::ptr Lookup(const std::string& name,
-                const T& default_value, const std::string& description = "") {
-            auto it = GetDatas().find(name);
-            if (it != GetDatas().end()) {
-                auto tmp = std::dynamic_pointer_cast<ConfigVar<T> >(it -> second);
-                if (tmp) {
-                    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookup name=" << name << " exists";
-                    return tmp;
-                } else {
-                    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookup name=" << name << " exists but type not "
-                    << typeid(T).name() << " real_type=" << it->second->getTypeName()
-                    << " " << it->second->toString();
-                    return nullptr;
-                }
-            }
-
-            if ( name.find_first_not_of("abcdefghikjlmnopqrstuvwxyz._0123456789")
-                != std::string::npos) {
-                SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name invalid " << name;
-                throw std::invalid_argument(name);
-            }
-
-            typename ConfigVar<T>::ptr v(new ConfigVar<T>(name, default_value, description));
-            GetDatas()[name] = v;
-            return v;
-        }
-
-        template <class T>
-        static typename ConfigVar<T>::ptr Lookup(const std::string& name) {
-            auto it = GetDatas().find(name);
-            if(it == GetDatas().end()) {
-                return nullptr;
-            }
-            return std::dynamic_pointer_cast<ConfigVar<T> >(it->second);
-        }
-
-        static void LoadFromYaml(const YAML::Node& root);
-        static ConfigVarBase::ptr LookupBase(const std::string& name);
-    private:
-        static ConfigVarMap& GetDatas() {
-            static ConfigVarMap s_datas;
-            return s_datas;
-        }
-
-        static RWMutexType& GetMutex() {
-            static RWMutexType s_mutex;
-            return s_mutex;
-        }
-        };
-
-    ConfigVarBase::ptr Config::LookupBase(const std::string& name) {
-        auto it = GetDatas().find(name);
-        return it == GetDatas().end() ? nullptr : it->second;
+static void ListAllMember(const std::string& prefix,
+                          const YAML::Node& node,
+                          std::list<std::pair<std::string, const YAML::Node> >& output) {
+    if(prefix.find_first_not_of("abcdefghikjlmnopqrstuvwxyz._012345678")
+            != std::string::npos) {
+        SYLAR_LOG_ERROR(g_logger) << "Config invalid name: " << prefix << " : " << node;
+        return;
     }
-    };
+    output.push_back(std::make_pair(prefix, node));
+    if(node.IsMap()) {
+        for(auto it = node.begin();
+                it != node.end(); ++it) {
+            ListAllMember(prefix.empty() ? it->first.Scalar()
+                    : prefix + "." + it->first.Scalar(), it->second, output);
+        }
+    }
+}
 
+void Config::LoadFromYaml(const YAML::Node& root) {
+    std::list<std::pair<std::string, const YAML::Node> > all_nodes;
+    ListAllMember("", root, all_nodes);
 
+    for(auto& i : all_nodes) {
+        std::string key = i.first;
+        if(key.empty()) {
+            continue;
+        }
+
+        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+        ConfigVarBase::ptr var = LookupBase(key);
+
+        if(var) {
+            if(i.second.IsScalar()) {
+                var->fromString(i.second.Scalar());
+            } else {
+                std::stringstream ss;
+                ss << i.second;
+                var->fromString(ss.str());
+            }
+        }
+    }
+}
+
+static std::map<std::string, uint64_t> s_file2modifytime;
+static sylar::Mutex s_mutex;
+
+void Config::LoadFromConfDir(const std::string& path, bool force) {
+    std::string absoulte_path = sylar::EnvMgr::GetInstance()->getAbsolutePath(path);
+    std::vector<std::string> files;
+    FSUtil::ListAllFile(files, absoulte_path, ".yml");
+
+    for(auto& i : files) {
+        {
+            struct stat st;
+            lstat(i.c_str(), &st);
+            sylar::Mutex::Lock lock(s_mutex);
+            if(!force && s_file2modifytime[i] == (uint64_t)st.st_mtime) {
+                continue;
+            }
+            s_file2modifytime[i] = st.st_mtime;
+        }
+        try {
+            YAML::Node root = YAML::LoadFile(i);
+            LoadFromYaml(root);
+            SYLAR_LOG_INFO(g_logger) << "LoadConfFile file="
+                << i << " ok";
+        } catch (...) {
+            SYLAR_LOG_ERROR(g_logger) << "LoadConfFile file="
+                << i << " failed";
+        }
+    }
+}
+
+void Config::Visit(std::function<void(ConfigVarBase::ptr)> cb) {
+    RWMutexType::ReadLock lock(GetMutex());
+    ConfigVarMap& m = GetDatas();
+    for(auto it = m.begin();
+            it != m.end(); ++it) {
+        cb(it->second);
+    }
+
+}
+
+}

@@ -6,6 +6,31 @@
  * @date 2019-05-23
  * @copyright Copyright (c) 2019年 sylar.yin All rights reserved (www.sylar.top)
  */
+
+ /**
+  * @brief 日志系统结构图
+  *
+  * +-------------------------------------------------------------+
+  * | LogEventWrap(解析构触发器), LogEvent(日志事件), LogLevel(日志级别) |
+  * +-------------------------------------------------------------+
+  * | LoggerManager (日志管理类)                                  |
+  * +-------------------------------------------------------------+
+  * | Logger (日志器)                                             |
+  * +-------------------------------------------------------------+
+  * | LogAppender (日志输出适配器基类)                            |
+  * |   -> FileLogAppender(文件), StdoutLogAppender(控制台), ... |
+  * +-------------------------------------------------------------+
+  * | LogFormatter (日志格式器)                                   |
+  * +-------------------------------------------------------------+
+  * | FormatItem (格式解析基类)                                   |
+  * |   -> Message(内容), Level(级别), Elapse(耗时)              |
+  * |   -> Name(日志名), ThreadId(线程ID), NewLine(换行)          |
+  * |   -> DateTime(日期), Filename(文件名), Line(行号)          |
+  * |   -> Tab(制表符), FiberId(协程ID), String(字面量)          |
+  * +-------------------------------------------------------------+
+  *
+  */
+
 #ifndef __SYLAR_LOG_H__
 #define __SYLAR_LOG_H__
 
@@ -271,7 +296,7 @@ public:
     /**
      * @brief 获取日志事件
      */
-    LogEvent::ptr getEvent() const { return m_event;}
+    LogEvent::ptr getEvent() const { return m_event; }
 
     /**
      * @brief 获取日志内容流
