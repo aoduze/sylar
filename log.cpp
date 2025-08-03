@@ -565,6 +565,7 @@ Logger::ptr LoggerManager::getLogger(const std::string& name) {
         return it->second;
     }
 
+    //不同模块需要不同的日志配置
     Logger::ptr logger(new Logger(name));
     logger->m_root = m_root;
     m_loggers[name] = logger;

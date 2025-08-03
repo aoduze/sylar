@@ -383,7 +383,7 @@ public:
 private:
     /// 日志格式模板
     std::string m_pattern;
-    /// 日志格式解析后格式
+    /// 日志格式解析后格式存储
     std::vector<FormatItem::ptr> m_items;
     /// 是否有错误
     bool m_error = false;
