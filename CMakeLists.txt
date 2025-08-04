@@ -21,7 +21,9 @@ set(PROJECT_SOURCES
         thread.cpp
         thread.h
         mutex.cpp
-        mutex.h                # This file is in the root directory
+        mutex.h
+        fiber.cpp
+        fiber.h                # This file is in the root directory
         # This file is inside the sylar/ directory
 )
 
@@ -33,6 +35,7 @@ add_executable(sylar_study ${PROJECT_SOURCES}
         log.cpp)
 
 find_library(YAMLCPP yaml-cpp)
+find_package(Protobuf REQUIRED)
 
 # --- Target Properties ---
 # Tell the compiler where to find headers (#include "...")
