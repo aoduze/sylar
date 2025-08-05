@@ -3,3 +3,128 @@
 //
 
 #include "fiber.h"
+#include "config.h"
+#include "log.h"
+#include "macro.h"
+#include <atomic>
+
+namespace sylar {
+    // 当前协程id
+    static std::atomic<uint64_t> s_fiber_id {0};
+    // 全局计数
+    static std::atomic<uint64_t> s_fiber_count {0};
+
+    // 线程局部变量(当前协程)
+    static thread_local Fiber* t_fiber = nullptr;
+    // 线程指针(主协程智能指针)
+    static thread_local Fiber::ptr t_threadFiber = nullptr;
+
+    // 配置指定协程的 栈大小
+    static ConfigVar<uint32_t>::ptr g_fiber_stack_size =
+        Config::Lookup<uint32_t>("fiber.stack_size",128 * 1024, "fiber stack size");
+
+    //我们想要统一管理栈大小
+    class MallocStackAllocator {
+    public:
+        // 分配协程栈
+        static void* Alloc(size_t size) {
+            return malloc(size);
+        }
+
+        // 销毁协程栈
+        // 某些内存管理器需要知道释放的内存块的大小
+        static void Dealloc(void* vp, size_t size) {
+            return free(vp);
+        }
+    };
+
+    using StackAllocator = MallocStackAllocator;
+
+    uint64_t Fiber::GetFiberId() {
+        if (t_fiber) {
+            return t_fiber->getId();
+        }
+        return 0;
+    }
+
+    Fiber::Fiber() {
+        m_state = EXEC;
+        //设置协程指针为当前协程
+        SetThis(this);
+
+        if (getcontext(&m_ctx)) {
+            SYLAR_ASSERT(false, "getcontext");
+        }
+
+        ++s_fiber_count;
+
+        SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber main";
+    }
+
+    Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool use_caller)
+        : m_id(++s_fiber_count)
+        , m_cb(cb) {
+        ++s_fiber_count;
+        //栈大小
+        m_stacksize = stacksize ? stacksize : g_fiber_stack_size->getValue();
+
+        //分配栈内存
+        m_stack = StackAllocator::Alloc(m_stacksize);
+        //获取当前上下文
+        if (getcontext(&m_ctx)) {
+            SYLAR_ASSERT(false, "getcontext");
+        }
+        //没有关联上下文(如果有关联上下文, 自身结束时会回到关联上下文执行)
+
+        //指定上下文起始指针
+        m_ctx.uc_link = nullptr;
+        //指定栈大小
+        m_ctx.uc_stack.ss_sp = m_stack;
+        //创建上下文
+        m_ctx.uc_stack.ss_size = m_stacksize;
+
+        if (!use_caller) {
+            makecontext(&m_ctx, &Fiber::MainFunc, 0);
+        } else {
+            makecontext(&m_ctx, &Fiber::CallerMainFunc, 0);
+        }
+
+        SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber id=" << m_id;
+    }
+
+    Fiber::~Fiber() {
+        --s_fiber_count;
+        if (m_stack) {
+            //子线程会有独属的m_stack
+            SYLAR_ASSERT(m_state == TERM || m_state == INIT);
+            //回收栈
+            StackAllocator::Dealloc(m_stack,m_stacksize);
+        } else {
+            SYLAR_ASSERT(!m_cb);
+            SYLAR_ASSERT(m_state == EXEC);
+
+            Fiber* cur = t_fiber;
+            if (cur == this) {
+                SetThis(nullptr);
+            }
+        }
+    }
+
+    //重置协程函数, 并重置状态, 可以复用栈
+    void Fiber::reset(std::function<void()> cb) {
+        SYLAR_ASSERT(m_stack);
+        SYLAR_ASSERT(m_state == TERM
+                || m_state == INIT
+                || m_state == EXCEPT);
+        m_cb = cb;
+        if (getcontext(&m_ctx)) {
+            SYLAR_ASSERT(false, "getcontext");
+        }
+        m_ctx.uc_link = nullptr;
+        m_ctx.uc_stack.ss_sp = m_stack;
+        m_ctx.uc_stack.ss_size = m_stacksize;
+
+        makecontext(&m_ctx, &Fiber::MainFunc, 0);
+        m_state = INIT;
+    }
+}

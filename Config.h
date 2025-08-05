@@ -16,6 +16,8 @@
 
 #include "thread.h"
 #include "log.h"
+#include "mutex.h"
+#include "fiber.h"
 #include "util.h"
 
 namespace sylar {

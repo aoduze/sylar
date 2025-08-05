@@ -23,7 +23,10 @@ set(PROJECT_SOURCES
         mutex.cpp
         mutex.h
         fiber.cpp
-        fiber.h                # This file is in the root directory
+        fiber.h
+        macro.h
+        util.cpp
+        util.h                # This file is in the root directory
         # This file is inside the sylar/ directory
 )
 

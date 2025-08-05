@@ -161,6 +161,9 @@ namespace sylar {
     //读写互斥量
     class RWMutex : private boost::noncopyable {
     public:
+        typedef ReadScopedLockImpl<RWMutex> ReadLock;
+        typedef WriteScopedLockImpl<RWMutex> WriteLock;
+
         RWMutex() {
             pthread_rwlock_init(&m_lock, nullptr);
         }
@@ -189,6 +192,7 @@ namespace sylar {
     public:
         typedef ReadScopedLockImpl<NullMutex> ReadLock;
         typedef WriteScopedLockImpl<NullMutex> WriteLock;
+
         NullRWMutex() {}
         ~NullRWMutex() {}
         void rdlock() {}
