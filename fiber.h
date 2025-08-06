@@ -57,6 +57,14 @@ namespace sylar {
         // 切换到后台执行
         void swapOut();
 
+        // 将当前线程切换到执行状态
+        // 执行的为当前线程的主协程
+        void call();
+
+        // 将当前线程切换到后台
+        // 执行的为该协程
+        void back();
+
         // 返回协程id
         uint64_t getId() const { return m_id; }
 
@@ -73,8 +81,14 @@ namespace sylar {
         //将当前协程切换为后台,并设置为Ready状态
         static void YieldToReady();
 
+        // 将当前协程切换为后台,并设置为Hold状态
+        static void YieldToHold();
+
         // 返回当前协程的总数量
         static uint64_t TotalFibers();
+
+        // 协程执行函数
+        static void MainFunc();
 
         //执行函数
         static void CallerMainFunc();

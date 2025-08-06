@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" serverName="Remote Host (16559688-712a-48b9-b693-613fd2af159e)" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
-      <paths name="Remote Host (16559688-712a-48b9-b693-613fd2af159e)">
+      <paths name="Remote Host (08876086-67ee-4efe-93d9-3a6dca03136f)">
         <serverdata>
           <mappings>
-            <mapping deploy="/snap" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/tmp/tmp.p4ilbbdufi/sylar_study" local="$PROJECT_DIR$" />
             <mapping local="" />
           </mappings>
           <excludedPaths>

@@ -18,8 +18,8 @@ set(PROJECT_SOURCES
         Config.cpp
        Config.h
         singleton.h
-        thread.cpp
-        thread.h
+        Thread.cpp
+        Thread.h
         mutex.cpp
         mutex.h
         fiber.cpp
@@ -38,7 +38,6 @@ add_executable(sylar_study ${PROJECT_SOURCES}
         log.cpp)
 
 find_library(YAMLCPP yaml-cpp)
-find_package(Protobuf REQUIRED)
 
 # --- Target Properties ---
 # Tell the compiler where to find headers (#include "...")
