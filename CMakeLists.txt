@@ -26,7 +26,9 @@ set(PROJECT_SOURCES
         fiber.h
         macro.h
         util.cpp
-        util.h                # This file is in the root directory
+        util.h
+        Schedule.h
+        Schedule.cpp                # This file is in the root directory
         # This file is inside the sylar/ directory
 )
 
@@ -37,7 +39,7 @@ add_executable(sylar_study ${PROJECT_SOURCES}
         log.h
         log.cpp)
 
-find_library(YAMLCPP yaml-cpp)
+
 
 # --- Target Properties ---
 # Tell the compiler where to find headers (#include "...")

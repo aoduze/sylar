@@ -21,9 +21,8 @@
  *    析构时必须确认已经没有正在执行的协程
  *
  *    把一些我觉得重要的细节写一下
- *    1. 时刻关注生命周期, 适当运用智能指针
- *    2. 协程的状态我们要时刻注意, 防止状态变化
- *    3. 要注意swapcontext中link的随时指向
+ *    1. 时刻关注生命周期, 适当运用智能指针与延长生命周期
+ *    要注意swapcontext中link的随时指向
  *    当然,我们约定好的配置不会出错,但需要警惕
  */
 namespace sylar {
@@ -227,6 +226,10 @@ namespace sylar {
         Fiber::ptr cur = GetThis();
         SYLAR_ASSERT(cur);
         try {
+            /* 有点瞎,一直在找cb,重点注释一下
+             * 执行完毕以后,我们立刻清空当前cb
+             * 并把状态设置为终止,非常的谨慎啊兄弟们
+             */
             cur -> m_cb();
             cur -> m_cb = nullptr;
             cur -> m_state = TERM;
@@ -238,6 +241,8 @@ namespace sylar {
                 << sylar::BacktraceToString();
         }
 
+        // 协程对象可能被调度器或者其他地方引用,如果swapOut之前不检查
+        // 这是非常危险的操作,所以我们获取原始的智能指针并释放减少引用技术
         auto raw_ptr = cur.get();
         cur.reset();
         raw_ptr -> swapOut();

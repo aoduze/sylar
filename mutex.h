@@ -128,6 +128,8 @@ namespace sylar {
     //互斥量
     class Mutex : private boost::noncopyable {
     public:
+        typedef ScopedLockImpl<Mutex> Lock;
+
         Mutex() {
             pthread_mutex_init(&m_mutex, nullptr);
         }
