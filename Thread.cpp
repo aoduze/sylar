@@ -84,12 +84,12 @@ namespace sylar {
         thread->m_id = sylar::GetThreadId();
         pthread_setname_np(pthread_self(), thread->m_name.substr(0, 15).c_str());
 
-        //thread->m_cb中用户提供的回调函数
+        //thread -> m_cb 中用户提供的回调函数
         //这里我们采用swap的好处是性能优势和异常安全以及资源管理
         std::function<void()> cb;
-        cb.swap(thread->m_cb);
+        cb.swap(thread -> m_cb);
         //唤醒线程确认同步
-        thread->m_semaphore.notify();
+        thread -> m_semaphore.notify();
         cb();
         return 0;
     }

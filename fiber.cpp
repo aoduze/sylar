@@ -33,6 +33,7 @@ namespace sylar {
 
     // 线程局部变量(当前协程)
     static thread_local Fiber* t_fiber = nullptr;
+
     // 线程指针(主协程智能指针)
     static thread_local Fiber::ptr t_threadFiber = nullptr;
 
@@ -66,7 +67,6 @@ namespace sylar {
 
     Fiber::Fiber() {
         m_state = EXEC;
-        //设置协程指针为当前协程
         SetThis(this);
 
         if (getcontext(&m_ctx)) {

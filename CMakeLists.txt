@@ -28,7 +28,13 @@ set(PROJECT_SOURCES
         util.cpp
         util.h
         Schedule.h
-        Schedule.cpp                # This file is in the root directory
+        Schedule.cpp
+        iomanager.cpp
+        iomanager.h
+        timer.cpp
+        timer.h
+        hook.cpp
+        hook.h                # This file is in the root directory
         # This file is inside the sylar/ directory
 )
 
