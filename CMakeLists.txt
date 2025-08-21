@@ -34,7 +34,12 @@ set(PROJECT_SOURCES
         timer.cpp
         timer.h
         hook.cpp
-        hook.h                # This file is in the root directory
+        hook.h
+        socket.cpp
+        socket.h
+        address.cpp
+        address.h
+        endian.h                # This file is in the root directory
         # This file is inside the sylar/ directory
 )
 

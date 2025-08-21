@@ -16,18 +16,11 @@
           </excludedPaths>
         </serverdata>
       </paths>
-      <paths name="Remote Host (146ee3b3-5ff3-4a3f-8b5f-d5bd235d8465)">
+      <paths name="Remote Host (936f4b99-8cdc-4159-bae5-8c0214251a8b)">
         <serverdata>
           <mappings>
-            <mapping deploy="/tmp/tmp.D8tKvPmDNi/sylar_study" local="$PROJECT_DIR$" />
+            <mapping deploy="/tmp/tmp.NHdjO6MMpz/sylar_study" local="$PROJECT_DIR$" />
           </mappings>
-          <excludedPaths>
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug" />
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-remote" />
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-remote" />
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-mingw" />
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-mingw" />
-          </excludedPaths>
         </serverdata>
       </paths>
     </serverData>
